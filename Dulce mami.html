@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Dulce Mami Crush</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            min-height: 100vh;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            background: radial-gradient(circle at 50% 30%, #ffb6d5 0%, #fff0f6 60%, #f8bbd0 100%);
+            position: relative;
+            overflow-x: hidden;
+        }
+        body::before {
+            content: "";
+            position: fixed;
+            left: 50%;
+            top: 30%;
+            width: 70vw;
+            height: 60vw;
+            max-width: 600px;
+            max-height: 500px;
+            background:
+                radial-gradient(circle at 30% 40%, #ff69b4 60%, transparent 70%),
+                radial-gradient(circle at 70% 40%, #ff69b4 60%, transparent 70%);
+            border-radius: 50% 50% 60% 60% / 60% 60% 100% 100%;
+            transform: translate(-50%, -50%) rotate(-10deg);
+            opacity: 0.18;
+            z-index: 0;
+            pointer-events: none;
+        }
+        h1 {
+            color: #ff69b4;
+            margin-top: 24px;
+            text-shadow: 0 0 10px #fff0f6, 0 0 20px #ffb6d5;
+            z-index: 2;
+        }
+        #juego {
+            margin: 20px 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 2;
+        }
+        #tablero {
+            display: grid;
+            grid-template-columns: repeat(8, 40px);
+            grid-template-rows: repeat(8, 40px);
+            gap: 2px;
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 0 20px #ffb6d5;
+            margin-bottom: 15px;
+            position: relative;
+        }
+        .celda {
+            width: 40px;
+            height: 40px;
+            font-size: 1.7em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #ffe4ef;
+            border-radius: 10px;
+            cursor: pointer;
+            user-select: none;
+            transition: background 0.2s, transform 0.2s;
+            position: relative;
+            z-index: 1;
+        }
+        .celda.seleccionada {
+            background: #ffb6d5;
+            box-shadow: 0 0 8px #ff69b4;
+            transform: scale(1.15);
+        }
+        .celda.match {
+            animation: match-pop 0.25s;
+            background: #ff69b4 !important;
+            color: #fff;
+        }
+        @keyframes match-pop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.25) rotate(-10deg);}
+            100% { transform: scale(1); }
+        }
+        .celda.desaparecer {
+            animation: desaparecer 0.4s forwards;
+        }
+        @keyframes desaparecer {
+            0% { opacity: 1; transform: scale(1);}
+            100% { opacity: 0; transform: scale(0.2);}
+        }
+        .celda.caer {
+            animation: caer 0.4s cubic-bezier(.68,-0.55,.27,1.55);
+        }
+        @keyframes caer {
+            0% { transform: translateY(-60px) scale(0.7); opacity: 0.2;}
+            80% { transform: translateY(8px) scale(1.1);}
+            100% { transform: translateY(0) scale(1); opacity: 1;}
+        }
+        #info {
+            color: #ff69b4;
+            margin-bottom: 10px;
+            text-align: center;
+            font-weight: bold;
+        }
+        #nivel {
+            font-weight: bold;
+            color: #ff69b4;
+        }
+        #meta {
+            color: #ff69b4;
+        }
+        #puntos {
+            color: #ff69b4;
+            font-weight: bold;
+        }
+        #mensaje {
+            color: #ff69b4;
+            font-size: 1.2em;
+            margin-top: 10px;
+            min-height: 1.5em;
+            text-shadow: 0 0 10px #fff0f6;
+        }
+        #boton-siguiente, #boton-reiniciar, #boton-mensaje {
+            margin-top: 10px;
+            padding: 10px 30px;
+            font-size: 1em;
+            border: none;
+            border-radius: 18px;
+            background: linear-gradient(90deg, #ffb6d5 0%, #ff69b4 100%);
+            color: #fff;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 0 10px #ffb6d5, 0 0 20px #ff69b4;
+            transition: background 0.2s, color 0.2s;
+            outline: none;
+        }
+        #boton-siguiente:active, #boton-reiniciar:active, #boton-mensaje:active {
+            background: linear-gradient(90deg, #ff69b4 0%, #ffb6d5 100%);
+            color: #fff;
+        }
+        #boton-siguiente {
+            display: none;
+        }
+        #boton-mensaje {
+            display: none;
+        }
+        /* Animación mensaje especial */
+        #mensaje-corazon {
+            display: none;
+            position: fixed;
+            left: 0; top: 0;
+            width: 100vw; height: 100vh;
+            background: rgba(255,182,213,0.97);
+            z-index: 100;
+            align-items: center;
+            justify-content: center;
+        }
+        #corazon-animado {
+            position: relative;
+            width: 320px;
+            height: 300px;
+            margin-bottom: 30px;
+        }
+        @media (max-width: 600px) {
+            #tablero {
+                grid-template-columns: repeat(8, 9vw);
+                grid-template-rows: repeat(8, 9vw);
+            }
+            .celda {
+                width: 9vw;
+                height: 9vw;
+                font-size: 1.3em;
+            }
+            #corazon-animado {
+                width: 200px;
+                height: 180px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>¡Dulce Mami Crush!</h1>
+    <div id="juego">
+        <div id="info">
+            Nivel: <span id="nivel">1</span> &nbsp;|&nbsp;
+            Movimientos: <span id="movs">0</span>/<span id="movs-max">0</span> &nbsp;|&nbsp;
+            Puntos: <span id="puntos">0</span><br>
+            Meta: <span id="meta"></span>
+        </div>
+        <div id="tablero"></div>
+        <div id="mensaje"></div>
+        <button id="boton-siguiente">Siguiente nivel</button>
+        <button id="boton-reiniciar">Reiniciar</button>
+        <button id="boton-mensaje">Ver mensaje especial</button>
+    </div>
+    <!-- Mensaje especial con animación de corazones -->
+    <div id="mensaje-corazon">
+        <div style="width:100vw; height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+            <div id="corazon-animado"></div>
+            <div id="feliz-mensaje" style="display:none; color:#ff69b4; font-size:2em; font-weight:bold; text-align:center; text-shadow:0 0 18px #fff;">
+                ¡Feliz Día de las Madres, te quiero muchisimo mami y espero te haya gustado! Postdata:Te debo la torta con la coca cola<br>
+                <span style="font-size:1.5em;">❤️</span>
+            </div>
+            <button onclick="cerrarMensajeCorazon()" style="margin-top:24px; padding:10px 30px; border-radius:18px; background:linear-gradient(90deg,#ffb6d5 0%,#ff69b4 100%); color:#fff; font-weight:bold; border:none; font-size:1em; cursor:pointer;">Cerrar</button>
+        </div>
+    </div>
+    <script>
+        // Figuras: corazón, torta, refresco, flores
+        const FIGURAS = [
+            { emoji: "❤️", nombre: "corazón" },
+            { emoji: "🍰", nombre: "torta" },
+            { emoji: "🥤", nombre: "refresco" },
+            { emoji: "🌸", nombre: "flor" }
+        ];
+        // Niveles: meta y movimientos máximos
+        const NIVELES = [
+            { meta: { tipo: 0, cantidad: 10 }, movs: 12 },
+            { meta: { tipo: 1, cantidad: 12 }, movs: 14 },
+            { meta: { tipo: 2, cantidad: 14 }, movs: 15 },
+            { meta: { tipo: 3, cantidad: 16 }, movs: 16 },
+            { meta: { tipo: 0, cantidad: 15 }, movs: 16 },
+            { meta: { tipo: 1, cantidad: 18 }, movs: 18 },
+            { meta: { tipo: 2, cantidad: 20 }, movs: 18 },
+            { meta: { tipo: 3, cantidad: 22 }, movs: 20 },
+            { meta: { tipo: 0, cantidad: 20 }, movs: 20 },
+            { meta: { tipo: 1, cantidad: 25 }, movs: 22 }
+        ];
+        const FILAS = 8, COLUMNAS = 8;
+        let tablero = [];
+        let seleccionado = null;
+        let nivelActual = 0;
+        let movimientos = 0;
+        let metaRestante = 0;
+        let animando = false;
+        let puntos = 0;
+
+        const tableroDiv = document.getElementById('tablero');
+        const nivelSpan = document.getElementById('nivel');
+        const movsSpan = document.getElementById('movs');
+        const movsMaxSpan = document.getElementById('movs-max');
+        const metaSpan = document.getElementById('meta');
+        const mensajeDiv = document.getElementById('mensaje');
+        const botonSiguiente = document.getElementById('boton-siguiente');
+        const botonReiniciar = document.getElementById('boton-reiniciar');
+        const puntosSpan = document.getElementById('puntos');
+        const botonMensaje = document.getElementById('boton-mensaje');
+        const mensajeCorazon = document.getElementById('mensaje-corazon');
+        const corazonAnimado = document.getElementById('corazon-animado');
+        const felizMensaje = document.getElementById('feliz-mensaje');
+
+        // Coordenadas para formar un corazón con corazones pequeños (matriz)
+        const coordsCorazon = [
+            [8,2],[9,1],[10,1],[11,2],[12,3],[13,5],[14,7],[15,10],[16,13],[17,16],[18,19],[19,21],[20,23],[21,24],[22,25],[23,25],[24,24],[25,23],[26,21],[27,19],[28,16],[29,13],[30,10],[31,7],[32,5],[33,3],[34,2],[35,1],[36,1],[37,2],
+            [9,3],[10,4],[11,5],[12,7],[13,9],[14,12],[15,15],[16,18],[17,20],[18,22],[19,23],[20,24],[21,24],[22,23],[23,22],[24,20],[25,18],[26,15],[27,12],[28,9],[29,7],[30,5],[31,4],[32,3]
+        ];
+
+        function mostrarMensajeCorazon() {
+            corazonAnimado.innerHTML = "";
+            felizMensaje.style.display = "none";
+            mensajeCorazon.style.display = "flex";
+            // Generar corazones pequeños
+            let corazones = [];
+            for(let i=0; i<coordsCorazon.length; i++) {
+                let [x,y] = coordsCorazon[i];
+                let cor = document.createElement("span");
+                cor.textContent = "❤️";
+                cor.style.position = "absolute";
+                cor.style.left = (x*7) + "px";
+                cor.style.top = (y*7) + "px";
+                cor.style.fontSize = "1.3em";
+                cor.style.opacity = "0.2";
+                cor.style.filter = "brightness(0.7)";
+                corazonAnimado.appendChild(cor);
+                corazones.push(cor);
+            }
+            // Animar corazones uno a uno
+            let idx = 0;
+            function iluminar() {
+                if(idx < corazones.length) {
+                    corazones[idx].style.opacity = "1";
+                    corazones[idx].style.filter = "brightness(1.2) drop-shadow(0 0 8px #ff69b4)";
+                    idx++;
+                    setTimeout(iluminar, 40);
+                } else {
+                    setTimeout(()=>{
+                        felizMensaje.style.display = "block";
+                    }, 400);
+                }
+            }
+            iluminar();
+        }
+        function cerrarMensajeCorazon() {
+            mensajeCorazon.style.display = "none";
+        }
+
+        function iniciarNivel() {
+            tablero = [];
+            for(let f=0; f<FILAS; f++) {
+                let fila = [];
+                for(let c=0; c<COLUMNAS; c++) {
+                    fila.push(Math.floor(Math.random()*FIGURAS.length));
+                }
+                tablero.push(fila);
+            }
+            limpiarMatchesIniciales();
+            seleccionado = null;
+            movimientos = 0;
+            nivelSpan.textContent = nivelActual+1;
+            movsSpan.textContent = movimientos;
+            movsMaxSpan.textContent = NIVELES[nivelActual].movs;
+            metaRestante = NIVELES[nivelActual].meta.cantidad;
+            metaSpan.innerHTML = `${metaRestante} <span style="font-size:1.2em">${FIGURAS[NIVELES[nivelActual].meta.tipo].emoji}</span>`;
+            mensajeDiv.textContent = "";
+            botonSiguiente.style.display = "none";
+            botonMensaje.style.display = "none";
+            dibujarTablero();
+        }
+
+        function limpiarMatchesIniciales() {
+            for(let f=0; f<FILAS; f++) {
+                for(let c=0; c<COLUMNAS; c++) {
+                    while(hayMatchEn(f, c)) {
+                        tablero[f][c] = Math.floor(Math.random()*FIGURAS.length);
+                    }
+                }
+            }
+        }
+        function hayMatchEn(f, c) {
+            let tipo = tablero[f][c];
+            if(c>=2 && tablero[f][c-1]===tipo && tablero[f][c-2]===tipo) return true;
+            if(f>=2 && tablero[f-1][c]===tipo && tablero[f-2][c]===tipo) return true;
+            return false;
+        }
+
+        function dibujarTablero(matchCeldas = [], desaparecerCeldas = [], caerCeldas = []) {
+            tableroDiv.innerHTML = "";
+            for(let f=0; f<FILAS; f++) {
+                for(let c=0; c<COLUMNAS; c++) {
+                    let celda = document.createElement('div');
+                    celda.className = 'celda';
+                    celda.textContent = tablero[f][c] !== null ? FIGURAS[tablero[f][c]].emoji : "";
+                    celda.dataset.f = f;
+                    celda.dataset.c = c;
+                    if(seleccionado && seleccionado.f===f && seleccionado.c===c) {
+                        celda.classList.add('seleccionada');
+                    }
+                    if(matchCeldas.some(([ff,cc])=>ff===f&&cc===c)) {
+                        celda.classList.add('match');
+                    }
+                    if(desaparecerCeldas.some(([ff,cc])=>ff===f&&cc===c)) {
+                        celda.classList.add('desaparecer');
+                    }
+                    if(caerCeldas.some(([ff,cc])=>ff===f&&cc===c)) {
+                        celda.classList.add('caer');
+                    }
+                    celda.onclick = () => seleccionar(f, c);
+                    tableroDiv.appendChild(celda);
+                }
+            }
+        }
+
+        function seleccionar(f, c) {
+            if(animando) return;
+            if(metaRestante<=0 || movimientos>=NIVELES[nivelActual].movs) return;
+            if(seleccionado) {
+                if(Math.abs(seleccionado.f-f)+Math.abs(seleccionado.c-c)===1) {
+                    intercambiar(seleccionado.f, seleccionado.c, f, c);
+                    seleccionado = null;
+                } else {
+                    seleccionado = {f, c};
+                    dibujarTablero();
+                }
+            } else {
+                seleccionado = {f, c};
+                dibujarTablero();
+            }
+        }
+
+        function intercambiar(f1, c1, f2, c2) {
+            [tablero[f1][c1], tablero[f2][c2]] = [tablero[f2][c2], tablero[f1][c1]];
+            let match = buscarMatches();
+            if(match.length > 0) {
+                movimientos++;
+                movsSpan.textContent = movimientos;
+                animarMatch(match, () => {
+                    eliminarMatches(match, () => {
+                        rellenarTablero();
+                    });
+                });
+            } else {
+                // Si no hay match, deshacer con animación
+                animando = true;
+                dibujarTablero([[f1,c1],[f2,c2]]);
+                setTimeout(() => {
+                    [tablero[f1][c1], tablero[f2][c2]] = [tablero[f2][c2], tablero[f1][c1]];
+                    dibujarTablero();
+                    animando = false;
+                }, 350);
+            }
+        }
+
+        function buscarMatches() {
+            let match = [];
+            // Horizontales
+            for(let f=0; f<FILAS; f++) {
+                let c=0;
+                while(c<COLUMNAS-2) {
+                    let tipo = tablero[f][c];
+                    if(tipo!==null && tablero[f][c+1]===tipo && tablero[f][c+2]===tipo) {
+                        let k=c+2;
+                        while(k+1<COLUMNAS && tablero[f][k+1]===tipo) k++;
+                        for(let i=c;i<=k;i++) match.push([f,i]);
+                        c=k+1;
+                    } else c++;
+                }
+            }
+            // Verticales
+            for(let c=0; c<COLUMNAS; c++) {
+                let f=0;
+                while(f<FILAS-2) {
+                    let tipo = tablero[f][c];
+                    if(tipo!==null && tablero[f+1][c]===tipo && tablero[f+2][c]===tipo) {
+                        let k=f+2;
+                        while(k+1<FILAS && tablero[k+1][c]===tipo) k++;
+                        for(let i=f;i<=k;i++) match.push([i,c]);
+                        f=k+1;
+                    } else f++;
+                }
+            }
+            // Quitar duplicados
+            return match.filter((v,i,a)=>a.findIndex(t=>(t[0]===v[0]&&t[1]===v[1]))===i);
+        }
+
+        function animarMatch(match, cb) {
+            animando = true;
+            dibujarTablero(match);
+            setTimeout(cb, 250);
+        }
+
+        function eliminarMatches(match, cb) {
+            let metaTipo = NIVELES[nivelActual].meta.tipo;
+            let metaAntes = metaRestante;
+            let puntosGanados = 0;
+            for(const [f,c] of match) {
+                if(tablero[f][c]===metaTipo && metaRestante>0) metaRestante--;
+                tablero[f][c] = null;
+                puntosGanados += 10;
+            }
+            puntos += puntosGanados;
+            puntosSpan.textContent = puntos;
+            if(metaRestante!==metaAntes) {
+                metaSpan.innerHTML = `${metaRestante} <span style="font-size:1.2em">${FIGURAS[metaTipo].emoji}</span>`;
+            }
+            dibujarTablero([], match);
+            setTimeout(cb, 400);
+        }
+
+        function rellenarTablero() {
+            // Caen las piezas
+            let caerCeldas = [];
+            for(let c=0; c<COLUMNAS; c++) {
+                for(let f=FILAS-1; f>=0; f--) {
+                    if(tablero[f][c]===null) {
+                        let arriba = f-1;
+                        while(arriba>=0 && tablero[arriba][c]===null) arriba--;
+                        if(arriba>=0) {
+                            tablero[f][c]=tablero[arriba][c];
+                            tablero[arriba][c]=null;
+                            caerCeldas.push([f,c]);
+                        }
+                    }
+                }
+            }
+            // Nuevas piezas
+            for(let c=0; c<COLUMNAS; c++) {
+                for(let f=0; f<FILAS; f++) {
+                    if(tablero[f][c]===null) {
+                        tablero[f][c]=Math.floor(Math.random()*FIGURAS.length);
+                        caerCeldas.push([f,c]);
+                    }
+                }
+            }
+            dibujarTablero([], [], caerCeldas);
+            setTimeout(()=>{
+                let match = buscarMatches();
+                if(match.length>0) {
+                    animarMatch(match, () => {
+                        eliminarMatches(match, () => {
+                            rellenarTablero();
+                        });
+                    });
+                } else {
+                    animando = false;
+                    verificarFinNivel();
+                }
+            }, 400);
+        }
+
+        function verificarFinNivel() {
+            if(metaRestante<=0) {
+                mensajeDiv.textContent = "¡Nivel superado! 🎉";
+                botonSiguiente.style.display = "inline-block";
+                botonMensaje.style.display = "inline-block";
+            } else if(movimientos>=NIVELES[nivelActual].movs) {
+                mensajeDiv.textContent = "¡Oh no! Te quedaste sin movimientos 😢";
+                botonSiguiente.style.display = "none";
+                botonMensaje.style.display = "inline-block";
+            } else {
+                botonSiguiente.style.display = "none";
+                botonMensaje.style.display = "none";
+            }
+        }
+
+        botonSiguiente.onclick = function() {
+            if(metaRestante<=0 && nivelActual<NIVELES.length-1) {
+                nivelActual++;
+                iniciarNivel();
+            }
+        };
+        botonReiniciar.onclick = function() {
+            iniciarNivel();
+        };
+        botonMensaje.onclick = mostrarMensajeCorazon;
+
+        function cerrarMensajeCorazon() {
+            mensajeCorazon.style.display = "none";
+        }
+
+        // Iniciar juego
+        iniciarNivel();
+    </script>
+</body>
+</html>
